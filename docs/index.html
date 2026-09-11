@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custos — Local Password & Passphrase Generator for Linux</title>
+  <meta name="description" content="Custos: generador local de contraseñas, frases de paso Diceware y lotes seguros para Linux. Sin red, GPL-3.0." />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Custos — Local Password Generator for Linux" />
+  <meta property="og:description" content="Passwords, Diceware passphrases and secure batches — 100% local, no network, native on Linux." />
+  <meta property="og:image" content="screenshots/contrasena.png" />
+  <meta property="og:url" content="https://srgp74mex.github.io/Custos/" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="icon" href="assets/custos.svg" type="image/svg+xml">
+
+  <style>
+    :root {
+      --bg-base: #0a0a16;
+      --bg-surface: rgba(255, 255, 255, 0.04);
+      --bg-surface-hover: rgba(255, 255, 255, 0.08);
+      --border-glass: rgba(255, 255, 255, 0.12);
+      --border-glass-hover: rgba(255, 255, 255, 0.25);
+      --accent: #7c6df2;
+      --accent-blue: #4f8ef7;
+      --accent-green: #34d399;
+      --text-main: #f8fafc;
+      --text-muted: #9aa3b8;
+      --text-dim: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+      background-image:
+        radial-gradient(circle at 20% 15%, rgba(124, 109, 242, 0.16), transparent 40%),
+        radial-gradient(circle at 80% 30%, rgba(139, 79, 197, 0.12), transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(79, 142, 247, 0.10), transparent 50%);
+      background-attachment: fixed;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      background: rgba(10, 10, 22, 0.75);
+      border-bottom: 1px solid var(--border-glass);
+      padding: 16px 0;
+    }
+    .nav-wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand img { width: 28px; height: 28px; filter: drop-shadow(0 0 12px rgba(124, 109, 242, 0.6)); }
+    .brand-title { background: linear-gradient(135deg, #ffffff 40%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .nav-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .nav-links { display: flex; gap: 22px; align-items: center; font-size: 0.95rem; font-weight: 500; color: var(--text-muted); }
+    .nav-links a:hover { color: var(--text-main); }
+
+    .lang-toggle { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); padding: 3px; border-radius: 9999px; }
+    .lang-toggle button { padding: 5px 13px; border-radius: 9999px; border: none; background: transparent; color: var(--text-muted); font-weight: 700; font-size: 0.78rem; cursor: pointer; }
+    .lang-toggle button.active { background: rgba(124, 109, 242, 0.25); color: #cfc9fb; }
+
+    .btn-github {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-glass);
+      padding: 8px 16px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; color: #fff;
+      backdrop-filter: blur(10px); transition: all .25s ease;
+    }
+    .btn-github:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.35); transform: translateY(-1px); }
+
+    .hero { padding: 80px 0 60px; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.35);
+      padding: 6px 16px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; color: var(--accent-green);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #ffffff 30%, #9aa3b8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p.tagline { font-size: clamp(1.05rem, 2vw, 1.25rem); color: var(--text-muted); max-width: 680px; margin: 0 auto 36px; }
+
+    .hero-ctas { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+      color: #04081a; padding: 14px 28px; border-radius: 12px; font-weight: 700; font-size: 1rem;
+      box-shadow: 0 8px 25px rgba(124, 109, 242, 0.35); transition: all .25s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124, 109, 242, 0.5); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: #fff;
+      padding: 14px 28px; border-radius: 12px; font-weight: 600; font-size: 1rem;
+      backdrop-filter: blur(12px); transition: all .25s ease;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+
+    .terminal-box {
+      max-width: 640px; margin: 0 auto 56px;
+      background: rgba(15, 15, 30, 0.85); border: 1px solid var(--border-glass); border-radius: 14px;
+      padding: 16px 22px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 20px 40px rgba(0,0,0,.4); backdrop-filter: blur(16px);
+    }
+    .terminal-code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #b5aef8; display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; }
+    .terminal-code span.prompt { color: var(--text-dim); user-select: none; }
+    .btn-copy {
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass); color: var(--text-muted);
+      border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 14px;
+    }
+    .btn-copy:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    .showcase-container { position: relative; margin: 0 auto 90px; max-width: 760px; }
+    .showcase-frame {
+      position: relative; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 100px rgba(124, 109, 242, 0.14); background: #0d0d1a;
+    }
+    .showcase-frame img { width: 100%; height: auto; }
+    .toggle-bar { display: inline-flex; background: rgba(15,15,30,0.8); border: 1px solid var(--border-glass); padding: 4px; border-radius: 9999px; margin-top: 24px; backdrop-filter: blur(12px); }
+    .toggle-btn { padding: 8px 18px; border-radius: 9999px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.88rem; cursor: pointer; }
+    .toggle-btn.active { background: rgba(124, 109, 242, 0.22); color: #cfc9fb; }
+
+    .section-title { text-align: center; margin-bottom: 46px; }
+    .section-title h2 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .section-title p { color: var(--text-muted); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+
+    section.container { padding-top: 10px; }
+
+    .bento-features { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; margin-bottom: 90px; }
+    .glass-card {
+      background: var(--bg-surface); border: 1px solid var(--border-glass); border-radius: 20px; padding: 30px;
+      backdrop-filter: blur(16px); transition: all .3s cubic-bezier(.16,1,.3,1);
+      display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative;
+    }
+    .glass-card:hover { background: var(--bg-surface-hover); border-color: var(--border-glass-hover); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.4); }
+    .card-icon { font-size: 1.9rem; margin-bottom: 14px; display: inline-block; }
+    .card-content h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .card-content p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.55; }
+    .col-span-8 { grid-column: span 8; }
+    .col-span-4 { grid-column: span 4; }
+    .col-span-6 { grid-column: span 6; }
+    .col-span-12 { grid-column: span 12; }
+    .card-preview-img { width: 100%; border-radius: 12px; margin-top: 18px; border: 1px solid rgba(255,255,255,0.1); }
+
+    .privacy-box {
+      background: linear-gradient(180deg, rgba(52,211,153,0.07) 0%, rgba(15,23,42,0.6) 100%);
+      border: 1px solid rgba(52,211,153,0.3); border-radius: 20px; padding: 32px 34px; margin-bottom: 90px;
+    }
+    .privacy-box h3 { font-size: 1.2rem; margin-bottom: 10px; color: var(--accent-green); }
+    .privacy-box p { color: var(--text-muted); font-size: 0.95rem; }
+    .privacy-box code { font-family: 'JetBrains Mono', monospace; color: var(--accent-green); font-size: 0.88em; }
+
+    .install-section {
+      background: linear-gradient(180deg, rgba(15,15,30,0.8) 0%, rgba(10,10,22,0.95) 100%);
+      border: 1px solid var(--border-glass); border-radius: 24px; padding: 48px 40px; margin-bottom: 90px;
+      backdrop-filter: blur(20px); text-align: center;
+    }
+    .install-section h2 { font-size: 2rem; font-weight: 800; }
+    .install-section > p { color: var(--text-muted); margin-top: 8px; }
+    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 36px; text-align: left; }
+    .step-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 14px; padding: 22px; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: rgba(124,109,242,0.18); color: #cfc9fb; font-weight: 700; border-radius: 8px; margin-bottom: 12px; }
+    .step-item h4 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .step-item p { font-size: 0.88rem; color: var(--text-muted); }
+    .step-item code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #b5aef8; }
+
+    pre { background: rgba(15,15,30,0.85); border: 1px solid var(--border-glass); border-radius: 14px; padding: 18px 20px; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; text-align: left; margin-top: 30px; }
+    code { font-family: 'JetBrains Mono', monospace; }
+
+    footer { border-top: 1px solid var(--border-glass); padding: 46px 0; text-align: center; color: var(--text-dim); font-size: 0.92rem; }
+    footer p { margin-bottom: 10px; }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--accent); }
+
+    [data-lang] { display: none; }
+    html[data-active="es"] [data-lang="es"] { display: revert; }
+    html[data-active="en"] [data-lang="en"] { display: revert; }
+
+    @media (max-width: 900px) {
+      .col-span-8, .col-span-4, .col-span-6 { grid-column: span 12; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-wrap">
+      <a href="#" class="brand">
+        <img src="assets/custos.svg" alt="Custos">
+        <span class="brand-title">Custos</span>
+      </a>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="#funciones"><span data-lang="es">Funciones</span><span data-lang="en">Features</span></a>
+          <a href="#instalar"><span data-lang="es">Instalación</span><span data-lang="en">Install</span></a>
+        </div>
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" data-set-lang="es" id="btn-es">ES</button>
+          <button type="button" data-set-lang="en" id="btn-en">EN</button>
+        </div>
+        <a href="https://github.com/SRGP74mex/Custos" target="_blank" class="btn-github">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span data-lang="es">🔒 100% local · sin conexión a red</span>
+        <span data-lang="en">🔒 100% local · no network connection</span>
+      </div>
+      <h1>Custos</h1>
+      <p class="tagline" data-lang="es">Contraseñas, frases de paso Diceware y lotes seguros — generados en tu equipo, nunca en la nube. GUI y línea de comandos en la misma app, nativa para Linux.</p>
+      <p class="tagline" data-lang="en">Passwords, Diceware passphrases and secure batches — generated on your machine, never in the cloud. GUI and command line in the same app, native on Linux.</p>
+
+      <div class="hero-ctas">
+        <a href="#instalar" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span data-lang="es">Cómo instalar</span><span data-lang="en">Quick Install</span>
+        </a>
+        <a href="https://github.com/SRGP74mex/Custos" target="_blank" class="btn-secondary">
+          <span data-lang="es">Ver en GitHub ⭐</span><span data-lang="en">Star on GitHub ⭐</span>
+        </a>
+      </div>
+
+      <div class="terminal-box">
+        <div class="terminal-code">
+          <span class="prompt">$</span>
+          <span id="clone-cmd">git clone https://github.com/SRGP74mex/Custos.git && cd Custos && ./install.sh</span>
+        </div>
+        <button class="btn-copy" onclick="copyCommand()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span id="copy-text">Copy</span>
+        </button>
+      </div>
+
+      <div class="showcase-container">
+        <div class="showcase-frame">
+          <img id="preview-img" src="screenshots/contrasena.png" alt="Custos screenshot">
+        </div>
+        <div class="toggle-bar">
+          <button class="toggle-btn active" onclick="switchShot('pass', this)">
+            <span data-lang="es">🔑 Contraseña</span><span data-lang="en">🔑 Password</span>
+          </button>
+          <button class="toggle-btn" onclick="switchShot('phrase', this)">
+            <span data-lang="es">📝 Frase de paso</span><span data-lang="en">📝 Passphrase</span>
+          </button>
+          <button class="toggle-btn" onclick="switchShot('batch', this)">
+            <span data-lang="es">📦 Lote</span><span data-lang="en">📦 Batch</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="funciones" class="container">
+    <div class="section-title">
+      <h2><span data-lang="es">Todo lo que necesitás, nada que filtrar</span><span data-lang="en">Everything you need, nothing to leak</span></h2>
+      <p data-lang="es">Aleatoriedad criptográfica con el módulo <code>secrets</code> de Python, cálculo de entropía y control fino sobre cada resultado.</p>
+      <p data-lang="en">Cryptographic randomness via Python's <code>secrets</code> module, entropy scoring and fine-grained control over every result.</p>
+    </div>
+
+    <div class="bento-features">
+      <div class="glass-card col-span-8">
+        <div class="card-content">
+          <span class="card-icon">🔑</span>
+          <div data-lang="es"><h3>Generador de contraseñas</h3><p>Longitud de 8 a 128 caracteres, con control independiente de mayúsculas, minúsculas, dígitos y símbolos — garantiza al menos un carácter de cada categoría elegida.</p></div>
+          <div data-lang="en"><h3>Password generator</h3><p>Length from 8 to 128 characters, with independent control over uppercase, lowercase, digits and symbols — guarantees at least one character from each selected category.</p></div>
+        </div>
+        <img class="card-preview-img" src="screenshots/contrasena.png" alt="Password generator">
+      </div>
+
+      <div class="glass-card col-span-4">
+        <div class="card-content">
+          <span class="card-icon">📝</span>
+          <div data-lang="es"><h3>Frase de paso (Diceware)</h3><p>1024 palabras en español, 3 a 10 palabras, separador y capitalización configurables.</p></div>
+          <div data-lang="en"><h3>Passphrase (Diceware)</h3><p>1024-word Spanish wordlist, 3 to 10 words, configurable separator and capitalization.</p></div>
+        </div>
+        <img class="card-preview-img" src="screenshots/frase-de-paso.png" alt="Diceware passphrase">
+      </div>
+
+      <div class="glass-card col-span-4">
+        <div class="card-content">
+          <span class="card-icon">📦</span>
+          <div data-lang="es"><h3>Generación por lotes</h3><p>Varias contraseñas o frases de una sola vez, en cantidades predefinidas.</p></div>
+          <div data-lang="en"><h3>Batch generation</h3><p>Several passwords or passphrases at once, in preset counts.</p></div>
+        </div>
+        <img class="card-preview-img" src="screenshots/lote.png" alt="Batch generation">
+      </div>
+
+      <div class="glass-card col-span-4">
+        <div class="card-content">
+          <span class="card-icon">🛡️</span>
+          <div data-lang="es"><h3>Modo seguro</h3><p>Excluí símbolos problemáticos para bases de datos, o caracteres ambiguos (0, O, 1, l, I).</p></div>
+          <div data-lang="en"><h3>Safe mode</h3><p>Exclude symbols that are problematic for databases, or ambiguous characters (0, O, 1, l, I).</p></div>
+        </div>
+      </div>
+
+      <div class="glass-card col-span-4">
+        <div class="card-content">
+          <span class="card-icon">📈</span>
+          <div data-lang="es"><h3>Entropía calculada</h3><p>Bits de entropía y clasificación de fortaleza para cada resultado, en la GUI y en la CLI (<code>-e</code>).</p></div>
+          <div data-lang="en"><h3>Computed entropy</h3><p>Entropy bits and a strength classification for every result, in both the GUI and the CLI (<code>-e</code>).</p></div>
+        </div>
+      </div>
+
+      <div class="glass-card col-span-4">
+        <div class="card-content">
+          <span class="card-icon">⌨️</span>
+          <div data-lang="es"><h3>CLI completa</h3><p>Los mismos controles desde la terminal, con copiado directo al portapapeles (<code>wl-copy</code> / <code>xclip</code>).</p></div>
+          <div data-lang="en"><h3>Full CLI</h3><p>The same controls from the terminal, with direct clipboard copy (<code>wl-copy</code> / <code>xclip</code>).</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-box">
+      <h3>🔒 <span data-lang="es">Privado por diseño</span><span data-lang="en">Private by design</span></h3>
+      <div data-lang="es"><p>Custos no hace ninguna llamada de red: sin telemetría, sin sincronización, sin servidor. Todo se genera con <code>secrets</code> (aleatoriedad criptográfica de Python) y vive únicamente en tu equipo, en el portapapeles cuando vos lo pedís.</p></div>
+      <div data-lang="en"><p>Custos makes no network calls at all: no telemetry, no syncing, no server. Everything is generated with <code>secrets</code> (Python's cryptographic randomness) and lives only on your machine, on the clipboard only when you ask for it.</p></div>
+    </div>
+  </section>
+
+  <section id="instalar" class="container">
+    <div class="install-section">
+      <h2>🚀 <span data-lang="es">Instalación</span><span data-lang="en">Install</span></h2>
+      <p data-lang="es">Linux de escritorio, Python 3 y <code>python3-venv</code>. El instalador arma su propio entorno.</p>
+      <p data-lang="en">Linux desktop, Python 3 and <code>python3-venv</code>. The installer sets up its own environment.</p>
+
+      <div class="steps-grid">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div data-lang="es"><h4>Cloná el repositorio</h4><p>O descargá el ZIP desde <code>Code → Download ZIP</code>.</p></div>
+          <div data-lang="en"><h4>Clone the repository</h4><p>Or download the ZIP from <code>Code → Download ZIP</code>.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div data-lang="es"><h4>Corré el instalador</h4><p><code>./install.sh</code> crea el venv, instala PySide6 y agrega el acceso al menú.</p></div>
+          <div data-lang="en"><h4>Run the installer</h4><p><code>./install.sh</code> creates the venv, installs PySide6 and adds the app menu entry.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div data-lang="es"><h4>Abrí Custos</h4><p>Desde el menú de aplicaciones, o ejecutando <code>custos</code> en la terminal.</p></div>
+          <div data-lang="en"><h4>Open Custos</h4><p>From the application menu, or by running <code>custos</code> in a terminal.</p></div>
+        </div>
+      </div>
+
+      <pre><code>git clone https://github.com/SRGP74mex/Custos.git
+cd Custos
+./install.sh</code></pre>
+      <p style="margin-top:20px">
+        <span data-lang="es">Uso por línea de comandos y desinstalación en el <a href="https://github.com/SRGP74mex/Custos#uso-por-l%C3%ADnea-de-comandos" target="_blank">README del repositorio</a>.</span>
+        <span data-lang="en">Command-line usage and uninstalling in the <a href="https://github.com/SRGP74mex/Custos/blob/main/README.en.md#command-line-usage" target="_blank">repository README</a>.</span>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p><strong>Custos</strong> — <span data-lang="es">bajo licencia GNU General Public License v3.0 (GPL-3.0).</span><span data-lang="en">released under the GNU General Public License v3.0 (GPL-3.0).</span></p>
+      <p data-lang="es">Hecho con Python y PySide6. Sin telemetría, sin red.</p>
+      <p data-lang="en">Built with Python and PySide6. No telemetry, no network.</p>
+      <p style="margin-top:16px">
+        <a href="https://github.com/SRGP74mex/Custos" target="_blank">GitHub</a> &bull;
+        <a href="https://github.com/SRGP74mex/Custos/issues" target="_blank"><span data-lang="es">Issues</span><span data-lang="en">Issues</span></a> &bull;
+        <a href="https://github.com/SRGP74mex/Custos/blob/main/LICENSE" target="_blank">GPL-3.0</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    function copyCommand() {
+      const text = document.getElementById('clone-cmd').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const t = document.getElementById('copy-text');
+        t.innerText = 'Copied! ✓';
+        setTimeout(() => { t.innerText = 'Copy'; }, 2000);
+      });
+    }
+
+    function switchShot(which, btn) {
+      const img = document.getElementById('preview-img');
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const map = { pass: 'screenshots/contrasena.png', phrase: 'screenshots/frase-de-paso.png', batch: 'screenshots/lote.png' };
+      img.src = map[which];
+    }
+
+    (function(){
+      var stored = null;
+      try { stored = localStorage.getItem('custos-lang'); } catch(e) {}
+      var lang = stored || (navigator.language && navigator.language.slice(0,2) === 'en' ? 'en' : 'es');
+      function apply(l){
+        document.documentElement.setAttribute('data-active', l);
+        document.documentElement.lang = l;
+        document.getElementById('btn-es').classList.toggle('active', l === 'es');
+        document.getElementById('btn-en').classList.toggle('active', l === 'en');
+      }
+      apply(lang);
+      document.querySelectorAll('[data-set-lang]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var l = btn.getAttribute('data-set-lang');
+          apply(l);
+          try { localStorage.setItem('custos-lang', l); } catch(e) {}
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
