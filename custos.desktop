@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Custos
+GenericName=Generador de contraseñas
+Comment=Genera contraseñas, frases de paso y lotes seguros de forma local
+Exec=custos
+Icon=custos
+Terminal=false
+Categories=Utility;Security;
+Keywords=password;contraseña;seguridad;generador;custos;passphrase;
+StartupNotify=true
+StartupWMClass=custos
+

@@ -1,0 +1,16 @@
+# Not part of this project — unrelated files that ended up in this folder.
+/signal-desktop-keyring.gpg
+/signal-desktop.sources
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Runtime / OS
+.DS_Store
+*.log

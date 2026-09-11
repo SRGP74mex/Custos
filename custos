@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+app_dir="$data_home/custos"
+
+# Si no se encuentra instalado en app_dir, permitir ejecución local
+if [ ! -f "$app_dir/generador_contrasenas.py" ]; then
+    script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+    if [ -f "$script_dir/generador_contrasenas.py" ]; then
+        app_dir="$script_dir"
+    fi
+fi
+
+launcher="$app_dir/.venv/bin/custos"
+if [ ! -x "$launcher" ]; then
+    launcher="$app_dir/.venv/bin/python"
+fi
+
+exec "$launcher" "$app_dir/generador_contrasenas.py" "$@"
+
