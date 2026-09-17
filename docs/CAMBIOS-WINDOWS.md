@@ -84,29 +84,38 @@ Toolset v3, Git):
 Tras revisar `wix/Product.wxs` y `build_msi.ps1` antes de integrarlos a este
 repositorio, se hicieron dos correcciones y se agregó CI:
 
-### Acceso directo del menú Inicio: registro por usuario eliminado
+### Acceso directo del menú Inicio: la clave `HKCU` era correcta
 
-El componente `ApplicationShortcut` original usaba una clave de registro en
-`HKCU` como `KeyPath` (patrón estándar de WiX para asociar un acceso
-directo a un componente que no tiene ningún archivo propio), aun cuando el
-paquete instala en modo `perMachine`. Un primer intento de "arreglar" esto
-cambiando la clave a `HKLM` **rompió la compilación**: las reglas de
-validación internas de WiX (ICE38, ICE43, ICE57) exigen `HKCU` en
-cualquier componente que viva bajo `ProgramMenuFolder` sin un archivo
-propio, precisamente porque esa carpeta puede resolver a una ubicación por
-usuario según la propiedad `ALLUSERS` en tiempo de instalación
-(`light.exe` falla con exit code 204 si no se respeta esto — ver el run
-de CI [35169584436](https://github.com/SRGP74mex/Custos/actions/runs/35169584436)).
+Una revisión inicial de `wix/Product.wxs` señaló que el componente
+`ApplicationShortcut` usa una clave de registro en `HKCU` como `KeyPath`
+aun cuando el paquete instala en modo `perMachine`, y planteó eso como un
+posible problema (un usuario distinto del que instaló el programa podría
+disparar una reparación de Windows Installer al abrir el acceso directo).
+Se probaron dos alternativas para evitarlo y **ambas rompieron la
+compilación** en CI:
 
-La solución correcta fue eliminar el componente y la clave de registro por
-completo: el `<Shortcut>` ahora vive dentro del mismo componente que el
-`.exe` (`CustosExecutable`, en `Program Files`, KeyPath = el propio
-archivo), usando el atributo `Directory="ApplicationProgramsFolder"` del
-elemento `Shortcut` para que el `.lnk` físicamente se cree en el menú
-Inicio aunque el componente "viva" en Program Files. Esto es válido en
-WiX v3 y evita el hack de registro: el componente ahora es inequívocamente
-por máquina (su KeyPath es un archivo real compartido por todos los
-usuarios), así que no depende de ningún estado por usuario.
+1. Cambiar la clave a `HKLM`: WiX rechaza esto con ICE38/ICE43/ICE57,
+   porque un componente sin archivo propio que vive bajo
+   `ProgramMenuFolder` debe usar `HKCU` (esa carpeta puede resolver a una
+   ubicación por usuario según `ALLUSERS` en tiempo de instalación) — ver
+   el run [35169584436](https://github.com/SRGP74mex/Custos/actions/runs/35169584436).
+2. Mover el `<Shortcut>` al mismo componente que el `.exe` (KeyPath = el
+   archivo, no un registro): WiX igual lo rechaza con ICE43/ICE57 — la
+   regla aplica a *cualquier* componente con un shortcut "no anunciado"
+   (`Advertise` no usado), sin importar si comparte componente con un
+   archivo — ver el run
+   [35170103194](https://github.com/SRGP74mex/Custos/actions/runs/35170103194).
+
+Conclusión: el diseño original (componente aparte, `HKCU`, shortcut no
+anunciado) **no era un defecto — es el patrón que WiX exige** para este
+tipo de acceso directo, el mismo que usa el tutorial oficial de WiX v3. Se
+revirtió a esa versión. La alternativa "correcta" para evitar por completo
+la dependencia de un registro por usuario sería usar un shortcut
+*anunciado* (`Advertise="yes"`), pero ese modelo tiene sus propias
+particularidades (resolución vía Windows Installer en el primer uso) y no
+se justificaba el cambio solo para una situación multiusuario que, en la
+práctica, la mayoría de instaladores de escritorio con este patrón nunca
+llegan a exhibir como problema real.
 
 ### Versionado del paquete
 
