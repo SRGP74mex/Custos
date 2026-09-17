@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="Custos"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="Custos"
+           UpgradeCode="5697F99D-2144-4B47-97E7-0585FAC24E52">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="Generador de contrasenas, frases de paso y lotes seguros"
+             Manufacturer="Custos" />
+
+    <MajorUpgrade DowngradeErrorMessage="Ya hay instalada una version mas reciente de Custos." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="CustosIcon.ico" SourceFile="..\custos.ico" />
+    <Property Id="ARPPRODUCTICON" Value="CustosIcon.ico" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/SRGP74mex/Custos" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Custos">
+          <Component Id="CustosExecutable" Guid="*" Win64="yes">
+            <File Id="CustosExe" Source="$(var.SourceDir)\Custos.exe" KeyPath="yes" />
+          </Component>
+          <Component Id="CustosLicense" Guid="*" Win64="yes">
+            <File Id="LicenseFile" Source="$(var.SourceDir)\..\LICENSE" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Custos">
+          <Component Id="ApplicationShortcut" Guid="*">
+            <Shortcut Id="StartMenuShortcut"
+                      Name="Custos"
+                      Description="Generador de contrasenas, frases de paso y lotes seguros"
+                      Target="[#CustosExe]"
+                      WorkingDirectory="INSTALLFOLDER"
+                      Icon="CustosIcon.ico" />
+            <RemoveFolder Id="CleanUpShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
+            <RegistryValue Root="HKLM" Key="Software\Custos" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="MainFeature" Title="Custos" Level="1">
+      <ComponentRef Id="CustosExecutable" />
+      <ComponentRef Id="CustosLicense" />
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+  </Product>
+</Wix>

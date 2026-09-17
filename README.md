@@ -1,8 +1,9 @@
 # Custos
 
-Generador de contraseñas, frases de paso (Diceware) y lotes seguros para Linux.
-100% local: no hace peticiones de red ni depende de servicios externos. GUI
-(PySide6) y modo de línea de comandos en el mismo programa.
+Generador de contraseñas, frases de paso (Diceware) y lotes seguros para
+Linux y Windows. 100% local: no hace peticiones de red ni depende de
+servicios externos. GUI (PySide6) y modo de línea de comandos en el mismo
+programa.
 
 🌐 [Read in English](README.en.md)
 
@@ -29,7 +30,7 @@ Generador de contraseñas, frases de paso (Diceware) y lotes seguros para Linux.
   para cada resultado generado.
 - **Lotes**: genera varias contraseñas o frases de paso de una sola vez.
 - **Portapapeles**: copia directa al portapapeles (Wayland vía `wl-copy`,
-  X11 vía `xclip`).
+  X11 vía `xclip`; en Windows usa el portapapeles nativo de Qt).
 - **CLI y GUI**: el mismo binario decide automáticamente, o se fuerza con
   `--gui` / `--cli`.
 
@@ -65,6 +66,57 @@ Para desinstalar:
 ```bash
 ./uninstall.sh
 ```
+
+### Windows
+
+Ver [docs/CAMBIOS-WINDOWS.md](docs/CAMBIOS-WINDOWS.md) para el detalle
+técnico de los cambios que hicieron posible este soporte.
+
+La forma más simple para un usuario final es el instalador MSI (ver
+[Descargas](#descargas-windows) o compílalo tú mismo más abajo). También
+existe una instalación basada en Python, equivalente a `install.sh`:
+
+Requisitos: Python 3.9+ (`winget install Python.Python.3.12` si no lo tienes).
+
+```powershell
+git clone https://github.com/SRGP74mex/Custos.git
+cd Custos
+.\install.ps1
+```
+
+Crea un entorno virtual en `%LOCALAPPDATA%\Custos\.venv`, instala `PySide6`,
+agrega un acceso directo al menú Inicio y expone el comando `custos` en una
+nueva terminal. Para desinstalar: `.\uninstall.ps1`.
+
+#### Descargas (Windows)
+
+En [Releases](https://github.com/SRGP74mex/Custos/releases) se publica
+`Custos-Setup.msi`: instala en `Program Files`, agrega el acceso directo del
+menú Inicio y aparece en «Agregar o quitar programas» (requiere permisos de
+administrador). No necesita tener Python instalado.
+
+#### Compilar el .exe / .msi tú mismo
+
+Requiere Python 3.9+ y, para el MSI, [WiX Toolset
+v3](https://wixtoolset.org/) (`winget install WiXToolset.WiXToolset`):
+
+```powershell
+.\build_windows.ps1   # genera dist\Custos.exe (standalone, con PyInstaller)
+.\build_msi.ps1        # empaqueta dist\Custos.exe en dist\Custos-Setup.msi
+```
+
+`build_windows.ps1` crea un entorno de build en `.venv-build`, instala
+`PySide6` y `pyinstaller`, y empaqueta `generador_contrasenas.py` en un único
+`.exe` en modo `--windowed` (sin consola, por lo que solo sirve para la GUI;
+para `--cli` usa `install.ps1`). Si existe `custos.ico` en la raíz del
+proyecto (generado a partir de `custos.svg`), se usa como icono del `.exe`.
+
+`build_msi.ps1` toma ese `.exe` y genera un instalador MSI (`dist\Custos-Setup.msi`)
+con [`wix/Product.wxs`](wix/Product.wxs): instalación en `Program Files`,
+acceso directo del menú Inicio, entrada en «Agregar o quitar programas»,
+licencia GPL-3.0 en el asistente y soporte de actualización (`MajorUpgrade`)
+para versiones futuras. Acepta `-Version` para fijar la versión del paquete,
+por ejemplo `.\build_msi.ps1 -Version 1.1.0.0`.
 
 ## Licencia
 

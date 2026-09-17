@@ -223,15 +223,17 @@ def run_cli(args: argparse.Namespace) -> int:
     if args.copy:
         full_text = "\n".join(p for p, _ in results)
         copied = False
-        import subprocess
-        for tool, cmd in (("wl-copy", ["wl-copy"]), ("xclip", ["xclip", "-selection", "clipboard"])):
-            if subprocess.run(["which", tool], capture_output=True).returncode == 0:
-                try:
-                    subprocess.run(cmd, input=full_text.encode(), check=True)
-                    copied = True
-                    break
-                except Exception:
-                    pass
+        if sys.platform.startswith("linux"):
+            import shutil
+            import subprocess
+            for tool, cmd in (("wl-copy", ["wl-copy"]), ("xclip", ["xclip", "-selection", "clipboard"])):
+                if shutil.which(tool):
+                    try:
+                        subprocess.run(cmd, input=full_text.encode(), check=True)
+                        copied = True
+                        break
+                    except Exception:
+                        pass
         if not copied:
             try:
                 app = QApplication.instance() or QApplication(["password-studio"])
