@@ -84,19 +84,29 @@ Toolset v3, Git):
 Tras revisar `wix/Product.wxs` y `build_msi.ps1` antes de integrarlos a este
 repositorio, se hicieron dos correcciones y se agregó CI:
 
-### Auto-reparación al abrir el acceso directo con otro usuario
+### Acceso directo del menú Inicio: registro por usuario eliminado
 
-El componente `ApplicationShortcut` usaba una clave de registro en `HKCU`
-como `KeyPath` (patrón estándar de WiX para asociar un acceso directo a un
-componente), pero el paquete se instala en modo `perMachine`. Eso significa
-que Windows Installer marca ese componente como "instalado" solo para el
-usuario que ejecutó el instalador; si un usuario *distinto* en la misma
-máquina abre el acceso directo del menú Inicio, Windows Installer no
-encuentra esa clave en su propio `HKCU` y dispara un ciclo de
-autoreparación (vuelve a copiar archivos, puede pedir el MSI original o
-UAC) antes de lanzar el programa. Se corrigió cambiando esa clave a `HKLM`
-en `wix/Product.wxs`, coherente con el resto del paquete, que de por sí
-requiere privilegios de administrador para instalarse.
+El componente `ApplicationShortcut` original usaba una clave de registro en
+`HKCU` como `KeyPath` (patrón estándar de WiX para asociar un acceso
+directo a un componente que no tiene ningún archivo propio), aun cuando el
+paquete instala en modo `perMachine`. Un primer intento de "arreglar" esto
+cambiando la clave a `HKLM` **rompió la compilación**: las reglas de
+validación internas de WiX (ICE38, ICE43, ICE57) exigen `HKCU` en
+cualquier componente que viva bajo `ProgramMenuFolder` sin un archivo
+propio, precisamente porque esa carpeta puede resolver a una ubicación por
+usuario según la propiedad `ALLUSERS` en tiempo de instalación
+(`light.exe` falla con exit code 204 si no se respeta esto — ver el run
+de CI [35169584436](https://github.com/SRGP74mex/Custos/actions/runs/35169584436)).
+
+La solución correcta fue eliminar el componente y la clave de registro por
+completo: el `<Shortcut>` ahora vive dentro del mismo componente que el
+`.exe` (`CustosExecutable`, en `Program Files`, KeyPath = el propio
+archivo), usando el atributo `Directory="ApplicationProgramsFolder"` del
+elemento `Shortcut` para que el `.lnk` físicamente se cree en el menú
+Inicio aunque el componente "viva" en Program Files. Esto es válido en
+WiX v3 y evita el hack de registro: el componente ahora es inequívocamente
+por máquina (su KeyPath es un archivo real compartido por todos los
+usuarios), así que no depende de ningún estado por usuario.
 
 ### Versionado del paquete
 
